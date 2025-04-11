@@ -20,54 +20,200 @@ import MaintenanceForm from "@/pages/maintenance/MaintenanceForm";
 import RentalList from "@/pages/rentals/RentalList";
 import RentalForm from "@/pages/rentals/RentalForm";
 import RentalHistory from "@/pages/rentals/RentalHistory";
+import LandingPage from "@/pages/landing/LandingPage";
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        {/* Dashboard */}
-        <Route path="/" component={Dashboard} />
-        
-        {/* Customers */}
-        <Route path="/customers" component={CustomerList} />
-        <Route path="/customers/new" component={CustomerForm} />
-        <Route path="/customers/:id" component={CustomerForm} />
-        
-        {/* Contacts */}
-        <Route path="/contacts" component={ContactList} />
-        <Route path="/contacts/new" component={ContactForm} />
-        <Route path="/contacts/:id" component={ContactForm} />
-        
-        {/* Equipment */}
-        <Route path="/equipment" component={EquipmentList} />
-        <Route path="/equipment/new" component={EquipmentForm} />
-        <Route path="/equipment/:id" component={EquipmentForm} />
-        
-        {/* Categories */}
-        <Route path="/categories" component={CategoryList} />
-        <Route path="/categories/new" component={CategoryForm} />
-        <Route path="/categories/:id" component={CategoryForm} />
-        
-        {/* Brands */}
-        <Route path="/brands" component={BrandList} />
-        <Route path="/brands/new" component={BrandForm} />
-        <Route path="/brands/:id" component={BrandForm} />
-        
-        {/* Maintenance */}
-        <Route path="/maintenance" component={MaintenanceList} />
-        <Route path="/maintenance/new" component={MaintenanceForm} />
-        <Route path="/maintenance/:id" component={MaintenanceForm} />
-        
-        {/* Rentals */}
-        <Route path="/rentals" component={RentalList} />
-        <Route path="/rentals/new" component={RentalForm} />
-        <Route path="/rentals/:id" component={RentalForm} />
-        <Route path="/rentals/history" component={RentalHistory} />
-        
-        {/* Fallback to 404 */}
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      {/* Landing page */}
+      <Route path="/" component={LandingPage} />
+      
+      {/* App routes wrapped in Layout */}
+      <Route path="/dashboard">
+        {() => (
+          <Layout>
+            <Dashboard />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Customers */}
+      <Route path="/customers">
+        {() => (
+          <Layout>
+            <CustomerList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/customers/new">
+        {() => (
+          <Layout>
+            <CustomerForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/customers/:id">
+        {(params) => (
+          <Layout>
+            <CustomerForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Contacts */}
+      <Route path="/contacts">
+        {() => (
+          <Layout>
+            <ContactList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/contacts/new">
+        {() => (
+          <Layout>
+            <ContactForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/contacts/:id">
+        {() => (
+          <Layout>
+            <ContactForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Equipment */}
+      <Route path="/equipment">
+        {() => (
+          <Layout>
+            <EquipmentList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/equipment/new">
+        {() => (
+          <Layout>
+            <EquipmentForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/equipment/:id">
+        {() => (
+          <Layout>
+            <EquipmentForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Categories */}
+      <Route path="/categories">
+        {() => (
+          <Layout>
+            <CategoryList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/categories/new">
+        {() => (
+          <Layout>
+            <CategoryForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/categories/:id">
+        {() => (
+          <Layout>
+            <CategoryForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Brands */}
+      <Route path="/brands">
+        {() => (
+          <Layout>
+            <BrandList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/brands/new">
+        {() => (
+          <Layout>
+            <BrandForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/brands/:id">
+        {() => (
+          <Layout>
+            <BrandForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Maintenance */}
+      <Route path="/maintenance">
+        {() => (
+          <Layout>
+            <MaintenanceList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/maintenance/new">
+        {() => (
+          <Layout>
+            <MaintenanceForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/maintenance/:id">
+        {() => (
+          <Layout>
+            <MaintenanceForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Rentals */}
+      <Route path="/rentals">
+        {() => (
+          <Layout>
+            <RentalList />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/rentals/new">
+        {() => (
+          <Layout>
+            <RentalForm />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/rentals/history">
+        {() => (
+          <Layout>
+            <RentalHistory />
+          </Layout>
+        )}
+      </Route>
+      <Route path="/rentals/:id">
+        {() => (
+          <Layout>
+            <RentalForm />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Fallback to 404 */}
+      <Route>
+        {() => (
+          <Layout>
+            <NotFound />
+          </Layout>
+        )}
+      </Route>
+    </Switch>
   );
 }
 

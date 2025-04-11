@@ -65,10 +65,10 @@ const Sidebar = () => {
         
         <div className="flex flex-col flex-grow px-4 py-4 overflow-y-auto">
           <div className="space-y-1">
-            <Link href="/">
+            <Link href="/dashboard">
               <div className={cn(
                 "flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer",
-                isActive("/") 
+                isActive("/dashboard") 
                   ? "text-white bg-primary" 
                   : "text-neutral-dark hover:bg-neutral-lightest"
               )}>

@@ -66,15 +66,15 @@ const Sidebar = () => {
         <div className="flex flex-col flex-grow px-4 py-4 overflow-y-auto">
           <div className="space-y-1">
             <Link href="/">
-              <a className={cn(
-                "flex items-center px-2 py-2 text-sm font-medium rounded-md",
+              <div className={cn(
+                "flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer",
                 isActive("/") 
                   ? "text-white bg-primary" 
                   : "text-neutral-dark hover:bg-neutral-lightest"
               )}>
                 <i className="ri-dashboard-line mr-3 text-lg"></i>
                 Dashboard
-              </a>
+              </div>
             </Link>
             
             {navigation.map((section, index) => (
@@ -85,15 +85,15 @@ const Sidebar = () => {
                 
                 {section.items.map((item, itemIndex) => (
                   <Link key={itemIndex} href={item.href}>
-                    <a className={cn(
-                      "flex items-center px-2 py-2 mt-1 text-sm font-medium rounded-md",
+                    <div className={cn(
+                      "flex items-center px-2 py-2 mt-1 text-sm font-medium rounded-md cursor-pointer",
                       isActive(item.href) 
                         ? "text-white bg-primary" 
                         : "text-neutral-dark hover:bg-neutral-lightest"
                     )}>
                       <i className={`${item.icon} mr-3 text-lg`}></i>
                       {item.label}
-                    </a>
+                    </div>
                   </Link>
                 ))}
               </div>

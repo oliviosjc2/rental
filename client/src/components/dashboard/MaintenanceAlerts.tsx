@@ -84,10 +84,10 @@ const MaintenanceAlerts = () => {
       
       <CardFooter className="border-t border-neutral-light px-5 py-3">
         <Link href="/maintenance">
-          <a className="text-sm text-primary hover:text-primary-dark font-medium flex items-center">
+          <div className="text-sm text-primary hover:text-primary-dark font-medium flex items-center cursor-pointer">
             View maintenance schedule
             <i className="ri-arrow-right-line ml-1"></i>
-          </a>
+          </div>
         </Link>
       </CardFooter>
     </Card>

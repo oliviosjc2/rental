@@ -135,6 +135,7 @@ export type EquipmentUnit = typeof equipmentUnits.$inferSelect;
 export const maintenance = pgTable("maintenance", {
   id: serial("id").primaryKey(),
   equipmentId: integer("equipment_id").notNull(),
+  equipmentUnitId: integer("equipment_unit_id"),
   type: text("type").notNull(), // Scheduled, Emergency, Preventive
   description: text("description").notNull(),
   scheduledDate: timestamp("scheduled_date"),
@@ -158,6 +159,7 @@ export const rentals = pgTable("rentals", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").notNull(),
   equipmentId: integer("equipment_id").notNull(),
+  equipmentUnitId: integer("equipment_unit_id"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   returnDate: timestamp("return_date"),

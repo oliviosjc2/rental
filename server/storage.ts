@@ -242,29 +242,50 @@ export class MemStorage implements IStorage {
       isPrimary: true
     });
     
-    // Seed equipment
+    // Seed equipment models
+    const equipmentIds = [];
     for (let i = 0; i < 12; i++) {
       const categoryIndex = i % categoryIds.length;
       const brandIndex = i % brandIds.length;
-      const status = i < 8 ? "available" : "rented";
       
-      this.createEquipment({
+      const equipment = this.createEquipment({
         name: `${this.getCategoryNameById(categoryIds[categoryIndex])} ${i + 1}`,
         model: `Model ${String.fromCharCode(65 + i % 26)}`,
-        serialNumber: `SN${i}${i + 1}${i + 2}${i + 3}`,
         brandId: brandIds[brandIndex],
         categoryId: categoryIds[categoryIndex],
+        dailyRate: 100 + (i * 25),
+        totalUnits: 0,
+        availableUnits: 0,
+        notes: "Available for rental"
+      });
+      
+      equipmentIds.push(equipment.id);
+    }
+    
+    // Seed equipment units
+    const equipmentUnitIds = [];
+    for (let i = 0; i < 24; i++) {
+      const equipmentIndex = i % equipmentIds.length;
+      const equipmentId = equipmentIds[equipmentIndex];
+      const status = i < 18 ? "available" : "rented";
+      
+      const unit = this.createEquipmentUnit({
+        equipmentId,
+        serialNumber: `SN${equipmentId}-${i + 100}`,
         purchaseDate: new Date(2022, i % 12, (i % 28) + 1),
-        purchasePrice: 10000 + (i * 5000),
+        purchasePrice: 10000 + (i * 2000),
         status,
+        condition: "good",
         notes: status === "available" ? "Ready for rental" : "Currently rented out"
       });
+      
+      equipmentUnitIds.push(unit.id);
     }
     
     // Seed maintenance records
-    const equipmentIds = Array.from(this.equipment.values()).map(e => e.id);
     for (let i = 0; i < 5; i++) {
       const equipmentId = equipmentIds[i % equipmentIds.length];
+      const unitId = equipmentUnitIds[i];
       const maintenanceTypes = ["Scheduled", "Emergency", "Preventive"];
       const maintenanceType = maintenanceTypes[i % maintenanceTypes.length];
       
@@ -273,6 +294,7 @@ export class MemStorage implements IStorage {
       
       this.createMaintenance({
         equipmentId,
+        equipmentUnitId: unitId,
         type: maintenanceType,
         description: `${maintenanceType} maintenance for ${this.getEquipmentById(equipmentId)?.name}`,
         scheduledDate: futureDate,
@@ -283,7 +305,12 @@ export class MemStorage implements IStorage {
     
     // Seed active rentals
     for (let i = 0; i < 4; i++) {
-      const equipmentId = equipmentIds[i + 8]; // Use equipment with status "rented"
+      const unitIndex = 18 + i; // Use units with status "rented"
+      const equipmentUnitId = equipmentUnitIds[unitIndex];
+      const unit = this.equipmentUnits.get(equipmentUnitId);
+      if (!unit) continue;
+      
+      const equipmentId = unit.equipmentId;
       const customerId = customerIds[i % customerIds.length];
       
       const startDate = new Date();
@@ -295,6 +322,7 @@ export class MemStorage implements IStorage {
       this.createRental({
         customerId,
         equipmentId,
+        equipmentUnitId,
         startDate,
         endDate,
         dailyRate: 100 + (i * 50),
@@ -315,6 +343,7 @@ export class MemStorage implements IStorage {
     this.createRental({
       customerId: customerIds[4],
       equipmentId: equipmentIds[4],
+      equipmentUnitId: equipmentUnitIds[10],
       startDate: pastStartDate,
       endDate: pastEndDate,
       returnDate: pastReturnDate,
@@ -538,6 +567,109 @@ export class MemStorage implements IStorage {
     return this.equipment.delete(id);
   }
 
+  // Equipment Unit methods
+  async getAllEquipmentUnits(): Promise<EquipmentUnit[]> {
+    return Array.from(this.equipmentUnits.values());
+  }
+
+  async getEquipmentUnitsByEquipment(equipmentId: number): Promise<EquipmentUnit[]> {
+    return Array.from(this.equipmentUnits.values()).filter(
+      unit => unit.equipmentId === equipmentId
+    );
+  }
+
+  async getEquipmentUnit(id: number): Promise<EquipmentUnit | undefined> {
+    return this.equipmentUnits.get(id);
+  }
+
+  async createEquipmentUnit(insertUnit: InsertEquipmentUnit): Promise<EquipmentUnit> {
+    const id = this.equipmentUnitCurrentId++;
+    const createdAt = new Date();
+    const unit: EquipmentUnit = { ...insertUnit, id, createdAt };
+    this.equipmentUnits.set(id, unit);
+    
+    // Update equipment available units count
+    const equipment = this.equipment.get(insertUnit.equipmentId);
+    if (equipment) {
+      const totalUnits = (equipment.totalUnits || 0) + 1;
+      const availableUnits = insertUnit.status === 'available' 
+        ? (equipment.availableUnits || 0) + 1 
+        : (equipment.availableUnits || 0);
+      
+      this.equipment.set(equipment.id, { 
+        ...equipment, 
+        totalUnits,
+        availableUnits
+      });
+    }
+    
+    return unit;
+  }
+
+  async updateEquipmentUnit(id: number, updateData: Partial<InsertEquipmentUnit>): Promise<EquipmentUnit | undefined> {
+    const unit = this.equipmentUnits.get(id);
+    if (!unit) return undefined;
+    
+    const oldStatus = unit.status;
+    const newStatus = updateData.status || oldStatus;
+    
+    const updatedUnit: EquipmentUnit = {
+      ...unit,
+      ...updateData,
+    };
+    
+    this.equipmentUnits.set(id, updatedUnit);
+    
+    // Update equipment available units count if status changed
+    if (oldStatus !== newStatus) {
+      const equipment = this.equipment.get(unit.equipmentId);
+      if (equipment) {
+        let availableUnits = equipment.availableUnits || 0;
+        
+        if (oldStatus === 'available' && newStatus !== 'available') {
+          availableUnits -= 1;
+        } else if (oldStatus !== 'available' && newStatus === 'available') {
+          availableUnits += 1;
+        }
+        
+        this.equipment.set(equipment.id, { 
+          ...equipment, 
+          availableUnits 
+        });
+      }
+    }
+    
+    return updatedUnit;
+  }
+
+  async deleteEquipmentUnit(id: number): Promise<boolean> {
+    const unit = this.equipmentUnits.get(id);
+    if (!unit) return false;
+    
+    // Update equipment counts
+    const equipment = this.equipment.get(unit.equipmentId);
+    if (equipment) {
+      const totalUnits = (equipment.totalUnits || 0) - 1;
+      const availableUnits = unit.status === 'available' 
+        ? (equipment.availableUnits || 0) - 1 
+        : (equipment.availableUnits || 0);
+      
+      this.equipment.set(equipment.id, { 
+        ...equipment, 
+        totalUnits: Math.max(0, totalUnits),
+        availableUnits: Math.max(0, availableUnits)
+      });
+    }
+    
+    return this.equipmentUnits.delete(id);
+  }
+
+  async getAvailableEquipmentUnits(equipmentId: number): Promise<EquipmentUnit[]> {
+    return Array.from(this.equipmentUnits.values()).filter(
+      unit => unit.equipmentId === equipmentId && unit.status === 'available'
+    );
+  }
+
   // Maintenance methods
   async getAllMaintenance(): Promise<Maintenance[]> {
     return Array.from(this.maintenance.values());
@@ -546,6 +678,12 @@ export class MemStorage implements IStorage {
   async getMaintenanceByEquipment(equipmentId: number): Promise<Maintenance[]> {
     return Array.from(this.maintenance.values()).filter(
       maintenance => maintenance.equipmentId === equipmentId
+    );
+  }
+
+  async getMaintenanceByEquipmentUnit(unitId: number): Promise<Maintenance[]> {
+    return Array.from(this.maintenance.values()).filter(
+      maintenance => maintenance.equipmentUnitId === unitId
     );
   }
 
@@ -604,6 +742,12 @@ export class MemStorage implements IStorage {
   async getRentalsByEquipment(equipmentId: number): Promise<Rental[]> {
     return Array.from(this.rentals.values()).filter(
       rental => rental.equipmentId === equipmentId
+    );
+  }
+
+  async getRentalsByEquipmentUnit(unitId: number): Promise<Rental[]> {
+    return Array.from(this.rentals.values()).filter(
+      rental => rental.equipmentUnitId === unitId
     );
   }
 

@@ -5,6 +5,7 @@ import {
   brands, type Brand, type InsertBrand,
   categories, type Category, type InsertCategory,
   equipment, type Equipment, type InsertEquipment,
+  equipmentUnits, type EquipmentUnit, type InsertEquipmentUnit,
   maintenance, type Maintenance, type InsertMaintenance,
   rentals, type Rental, type InsertRental
 } from "@shared/schema";
@@ -53,9 +54,19 @@ export interface IStorage {
   updateEquipment(id: number, equipment: Partial<InsertEquipment>): Promise<Equipment | undefined>;
   deleteEquipment(id: number): Promise<boolean>;
 
+  // Equipment Units
+  getAllEquipmentUnits(): Promise<EquipmentUnit[]>;
+  getEquipmentUnitsByEquipment(equipmentId: number): Promise<EquipmentUnit[]>;
+  getEquipmentUnit(id: number): Promise<EquipmentUnit | undefined>;
+  createEquipmentUnit(unit: InsertEquipmentUnit): Promise<EquipmentUnit>;
+  updateEquipmentUnit(id: number, unit: Partial<InsertEquipmentUnit>): Promise<EquipmentUnit | undefined>;
+  deleteEquipmentUnit(id: number): Promise<boolean>;
+  getAvailableEquipmentUnits(equipmentId: number): Promise<EquipmentUnit[]>;
+
   // Maintenance
   getAllMaintenance(): Promise<Maintenance[]>;
   getMaintenanceByEquipment(equipmentId: number): Promise<Maintenance[]>;
+  getMaintenanceByEquipmentUnit(unitId: number): Promise<Maintenance[]>;
   getPendingMaintenance(): Promise<Maintenance[]>;
   getMaintenance(id: number): Promise<Maintenance | undefined>;
   createMaintenance(maintenance: InsertMaintenance): Promise<Maintenance>;
@@ -67,6 +78,7 @@ export interface IStorage {
   getActiveRentals(): Promise<Rental[]>;
   getRentalsByCustomer(customerId: number): Promise<Rental[]>;
   getRentalsByEquipment(equipmentId: number): Promise<Rental[]>;
+  getRentalsByEquipmentUnit(unitId: number): Promise<Rental[]>;
   getRental(id: number): Promise<Rental | undefined>;
   createRental(rental: InsertRental): Promise<Rental>;
   updateRental(id: number, rental: Partial<InsertRental>): Promise<Rental | undefined>;
@@ -94,6 +106,7 @@ export class MemStorage implements IStorage {
   private brands: Map<number, Brand>;
   private categories: Map<number, Category>;
   private equipment: Map<number, Equipment>;
+  private equipmentUnits: Map<number, EquipmentUnit>;
   private maintenance: Map<number, Maintenance>;
   private rentals: Map<number, Rental>;
   
@@ -103,6 +116,7 @@ export class MemStorage implements IStorage {
   private brandCurrentId: number;
   private categoryCurrentId: number;
   private equipmentCurrentId: number;
+  private equipmentUnitCurrentId: number;
   private maintenanceCurrentId: number;
   private rentalCurrentId: number;
 
@@ -113,6 +127,7 @@ export class MemStorage implements IStorage {
     this.brands = new Map();
     this.categories = new Map();
     this.equipment = new Map();
+    this.equipmentUnits = new Map();
     this.maintenance = new Map();
     this.rentals = new Map();
     
@@ -122,6 +137,7 @@ export class MemStorage implements IStorage {
     this.brandCurrentId = 1;
     this.categoryCurrentId = 1;
     this.equipmentCurrentId = 1;
+    this.equipmentUnitCurrentId = 1;
     this.maintenanceCurrentId = 1;
     this.rentalCurrentId = 1;
     

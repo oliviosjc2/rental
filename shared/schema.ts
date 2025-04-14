@@ -89,17 +89,16 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
 
-// Equipment schema
+// Equipment schema - now represents equipment models rather than individual units
 export const equipment = pgTable("equipment", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   model: text("model"),
-  serialNumber: text("serial_number"),
   brandId: integer("brand_id"),
   categoryId: integer("category_id"),
-  purchaseDate: date("purchase_date"),
-  purchasePrice: integer("purchase_price"),
-  status: text("status").notNull().default("available"),
+  dailyRate: integer("daily_rate"),
+  totalUnits: integer("total_units").default(0),
+  availableUnits: integer("available_units").default(0),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -109,8 +108,28 @@ export const insertEquipmentSchema = createInsertSchema(equipment).omit({
   createdAt: true,
 });
 
+// Equipment units schema - represents individual physical units of equipment
+export const equipmentUnits = pgTable("equipment_units", {
+  id: serial("id").primaryKey(),
+  equipmentId: integer("equipment_id").notNull(),
+  serialNumber: text("serial_number"),
+  purchaseDate: date("purchase_date"),
+  purchasePrice: integer("purchase_price"),
+  status: text("status").notNull().default("available"), // available, rented, maintenance, retired
+  condition: text("condition").default("good"), // excellent, good, fair, poor
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEquipmentUnitSchema = createInsertSchema(equipmentUnits).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertEquipment = z.infer<typeof insertEquipmentSchema>;
 export type Equipment = typeof equipment.$inferSelect;
+export type InsertEquipmentUnit = z.infer<typeof insertEquipmentUnitSchema>;
+export type EquipmentUnit = typeof equipmentUnits.$inferSelect;
 
 // Maintenance schema
 export const maintenance = pgTable("maintenance", {

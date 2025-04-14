@@ -54,8 +54,7 @@ const EquipmentList = () => {
   const filteredEquipment = equipment?.filter(item => {
     const matchesSearch = 
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.serialNumber?.includes(searchQuery);
+      (item.model?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     
     const matchesCategory = categoryFilter === "all" || 
       (item.categoryId?.toString() === categoryFilter);
@@ -63,38 +62,44 @@ const EquipmentList = () => {
     const matchesBrand = brandFilter === "all" || 
       (item.brandId?.toString() === brandFilter);
     
+    // Equipment model doesn't have status anymore, it has availableUnits
     const matchesStatus = statusFilter === "all" || 
-      item.status.toLowerCase() === statusFilter.toLowerCase();
+      (statusFilter === "available" && (item.availableUnits ?? 0) > 0) ||
+      (statusFilter === "unavailable" && (item.availableUnits ?? 0) === 0);
     
     return matchesSearch && matchesCategory && matchesBrand && matchesStatus;
   }) || [];
   
   // Get category and brand names
-  const getCategoryName = (categoryId?: number) => {
+  const getCategoryName = (categoryId: number | null) => {
     if (!categoryId) return 'Uncategorized';
     const category = categories?.find(c => c.id === categoryId);
     return category?.name || 'Unknown Category';
   };
   
-  const getBrandName = (brandId?: number) => {
+  const getBrandName = (brandId: number | null) => {
     if (!brandId) return 'No Brand';
     const brand = brands?.find(b => b.id === brandId);
     return brand?.name || 'Unknown Brand';
   };
   
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'available':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Available</Badge>;
-      case 'rented':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Rented</Badge>;
-      case 'maintenance':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Maintenance</Badge>;
-      case 'unavailable':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Unavailable</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  // Get availability badge based on available units
+  const getAvailabilityBadge = (item: Equipment) => {
+    const totalUnits = item.totalUnits || 0;
+    const availableUnits = item.availableUnits || 0;
+    
+    if (totalUnits === 0) {
+      return <Badge variant="outline">No Units</Badge>;
+    } else if (availableUnits === 0) {
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">No Available Units</Badge>;
+    } else if (availableUnits < totalUnits) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+        {availableUnits}/{totalUnits} Available
+      </Badge>;
+    } else {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+        {availableUnits}/{totalUnits} Available
+      </Badge>;
     }
   };
   
@@ -200,10 +205,10 @@ const EquipmentList = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Model/Serial</TableHead>
+                <TableHead>Model/Units</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Brand</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Availability</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -232,11 +237,11 @@ const EquipmentList = () => {
                     </TableCell>
                     <TableCell>
                       <div>{item.model || 'N/A'}</div>
-                      <div className="text-xs text-neutral-dark">{item.serialNumber || 'No S/N'}</div>
+                      <div className="text-xs text-neutral-dark">Units: {item.totalUnits || 0}</div>
                     </TableCell>
                     <TableCell>{getCategoryName(item.categoryId)}</TableCell>
                     <TableCell>{getBrandName(item.brandId)}</TableCell>
-                    <TableCell>{getStatusBadge(item.status)}</TableCell>
+                    <TableCell>{getAvailabilityBadge(item)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
